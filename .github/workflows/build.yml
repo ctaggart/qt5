@@ -1,0 +1,141 @@
+name: Build Static Qt
+
+on:
+  workflow_dispatch:
+    inputs:
+      qt_version:
+        description: "Qt version (e.g. 6.8.2)"
+        required: true
+        default: "6.8.2"
+
+permissions: {}
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            target: x86_64-linux-gnu
+            configure_extra: ""
+          - os: macos-14
+            target: aarch64-macos
+            configure_extra: "-no-framework"
+          - os: windows-latest
+            target: x86_64-windows-msvc
+            configure_extra: ""
+
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 180
+    env:
+      QT_VERSION: ${{ inputs.qt_version }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up MSVC (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Install Ninja
+        uses: seanmiddleditch/gha-setup-ninja@v5
+
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential pkg-config perl python3 gperf \
+            libgl1-mesa-dev libglu1-mesa-dev \
+            libfontconfig1-dev libfreetype-dev \
+            libglib2.0-dev \
+            libx11-dev libx11-xcb-dev libxext-dev libxfixes-dev \
+            libxi-dev libxrender-dev libxcb1-dev \
+            libxcb-cursor-dev libxcb-glx0-dev libxcb-icccm4-dev \
+            libxcb-image0-dev libxcb-keysyms1-dev libxcb-randr0-dev \
+            libxcb-render-util0-dev libxcb-shape0-dev libxcb-shm0-dev \
+            libxcb-sync-dev libxcb-xfixes0-dev libxcb-xinerama0-dev \
+            libxcb-xkb-dev libxkbcommon-dev libxkbcommon-x11-dev \
+            libvulkan-dev \
+            libasound2-dev libpulse-dev \
+            libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
+
+      - name: Download Qt source
+        shell: bash
+        run: |
+          QT_MAJOR_MINOR="${QT_VERSION%.*}"
+          curl -fSL -o qt-src.tar.xz \
+            "https://download.qt.io/official_releases/qt/${QT_MAJOR_MINOR}/${QT_VERSION}/single/qt-everywhere-src-${QT_VERSION}.tar.xz"
+          tar xf qt-src.tar.xz
+          rm qt-src.tar.xz
+
+      - name: Configure Qt (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          mkdir build && cd build
+          ../qt-everywhere-src-${QT_VERSION}/configure \
+            -static -release -opensource -confirm-license \
+            -prefix "$GITHUB_WORKSPACE/qt-install" \
+            ${{ matrix.configure_extra }} \
+            -nomake examples -nomake tests \
+            -skip qtwebengine -skip qt3d -skip qtquick3d -skip qtdeclarative \
+            -skip qtcharts -skip qtdatavis3d -skip qtlottie \
+            -skip qtscxml -skip qtvirtualkeyboard -skip qtwayland \
+            -skip qtwebsockets -skip qtwebchannel -skip qtwebview \
+            -skip qtremoteobjects -skip qtsensors -skip qtserialbus \
+            -skip qtserialport -skip qtpositioning \
+            -skip qtspeech -skip qtconnectivity \
+            -skip qtcoap -skip qtmqtt -skip qtopcua -skip qthttpserver \
+            -no-feature-sql -no-feature-testlib \
+            -- -G Ninja
+
+      - name: Configure Qt (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          mkdir build
+          cd build
+          ..\qt-everywhere-src-%QT_VERSION%\configure.bat ^
+            -static -release -opensource -confirm-license ^
+            -prefix "%GITHUB_WORKSPACE%\qt-install" ^
+            -nomake examples -nomake tests ^
+            -skip qtwebengine -skip qt3d -skip qtquick3d -skip qtdeclarative ^
+            -skip qtcharts -skip qtdatavis3d -skip qtlottie ^
+            -skip qtscxml -skip qtvirtualkeyboard -skip qtwayland ^
+            -skip qtwebsockets -skip qtwebchannel -skip qtwebview ^
+            -skip qtremoteobjects -skip qtsensors -skip qtserialbus ^
+            -skip qtserialport -skip qtpositioning ^
+            -skip qtspeech -skip qtconnectivity ^
+            -skip qtcoap -skip qtmqtt -skip qtopcua -skip qthttpserver ^
+            -no-feature-sql -no-feature-testlib ^
+            -- -G Ninja
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Install
+        run: cmake --install build
+
+      - name: Package (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          mv qt-install "qt-static-${QT_VERSION}-${{ matrix.target }}"
+          tar cJf "qt-static-${QT_VERSION}-${{ matrix.target }}.tar.xz" \
+            "qt-static-${QT_VERSION}-${{ matrix.target }}"
+
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          name="qt-static-${QT_VERSION}-${{ matrix.target }}"
+          mv qt-install "$name"
+          tar cJf "$name.tar.xz" "$name"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: qt-static-${{ env.QT_VERSION }}-${{ matrix.target }}
+          path: qt-static-${{ env.QT_VERSION }}-${{ matrix.target }}.tar.xz
+          compression-level: 0
+          retention-days: 7

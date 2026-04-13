@@ -1,0 +1,66 @@
+name: Publish Qt Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      qt_version:
+        description: "Qt version to publish (e.g. 6.8.2)"
+        required: true
+      run_id:
+        description: "Build workflow run ID to download artifacts from"
+        required: true
+
+permissions: {}
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: write
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist/
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          merge-multiple: true
+
+      - name: Validate artifacts
+        env:
+          QT_VERSION: ${{ inputs.qt_version }}
+        run: |
+          echo "Expected artifacts for Qt ${QT_VERSION}:"
+          ls -lh dist/
+          for f in dist/*; do
+            if [[ "$f" != *"${QT_VERSION}"* ]]; then
+              echo "ERROR: Artifact '$f' does not match version ${QT_VERSION}"
+              exit 1
+            fi
+          done
+          echo "All artifacts match version ${QT_VERSION}"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          QT_VERSION: ${{ inputs.qt_version }}
+        run: |
+          TAG="v${QT_VERSION}"
+          TITLE="Qt Static ${QT_VERSION}"
+          NOTES="Static Qt ${QT_VERSION} libraries for use with zig build.
+
+          Modules included: qtbase (Core, Gui, Widgets, Xml, Network), qtmultimedia, qtsvg.
+
+          Built with: -static -release
+
+          Source: https://download.qt.io/official_releases/qt/"
+
+          # Delete existing release if present (idempotent)
+          gh release delete "${TAG}" --repo "${GITHUB_REPOSITORY}" --yes 2>/dev/null || true
+
+          gh release create "${TAG}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --title "${TITLE}" \
+            --notes "${NOTES}" \
+            dist/*
