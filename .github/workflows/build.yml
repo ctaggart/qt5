@@ -44,10 +44,12 @@ jobs:
       - name: Install dependencies (Linux)
         if: runner.os == 'Linux'
         run: |
+          # Remove broken LLVM 17 cmake files left on the runner image
+          sudo rm -rf /usr/lib/cmake/clang-17 /usr/lib/llvm-17
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             build-essential pkg-config perl python3 gperf \
-            libclang-dev llvm-dev \
+            libclang-18-dev llvm-18-dev \
             libgl1-mesa-dev libglu1-mesa-dev \
             libfontconfig1-dev libfreetype-dev \
             libglib2.0-dev \
