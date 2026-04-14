@@ -139,3 +139,43 @@ jobs:
           path: qt-static-${{ env.QT_VERSION }}-${{ matrix.target }}.tar.xz
           compression-level: 0
           retention-days: 7
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      QT_VERSION: ${{ inputs.qt_version }}
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist/
+          merge-multiple: true
+
+      - name: List assets
+        run: ls -lh dist/
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="v${QT_VERSION}"
+          TITLE="Qt Static ${QT_VERSION}"
+          NOTES="Static Qt ${QT_VERSION} libraries for use with zig build.
+
+          Modules included: qtbase (Core, Gui, Widgets, Xml, Network), qtmultimedia, qtsvg.
+
+          Built with: -static -release
+
+          Source: https://download.qt.io/official_releases/qt/"
+
+          # Delete existing release if present (idempotent)
+          gh release delete "${TAG}" --repo "${GITHUB_REPOSITORY}" --yes 2>/dev/null || true
+
+          gh release create "${TAG}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --title "${TITLE}" \
+            --notes "${NOTES}" \
+            dist/*
