@@ -58,7 +58,7 @@ jobs:
             libxcb-sync-dev libxcb-xfixes0-dev libxcb-xinerama0-dev \
             libxcb-xkb-dev libxkbcommon-dev libxkbcommon-x11-dev \
             libvulkan-dev \
-            libasound2-dev libpulse-dev \
+            libasound2-dev libpulse-dev libunwind-dev \
             libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
 
       - name: Download Qt source
@@ -80,7 +80,7 @@ jobs:
             ${{ matrix.configure_extra }} \
             -nomake examples -nomake tests \
             -skip qtwebengine -skip qt3d -skip qtquick3d -skip qtdeclarative \
-            -skip qtcharts -skip qtdatavis3d -skip qtlottie \
+            -skip qtcharts -skip qtdatavis3d -skip qtlottie -skip qtgraphs \
             -skip qtscxml -skip qtvirtualkeyboard -skip qtwayland \
             -skip qtwebsockets -skip qtwebchannel -skip qtwebview \
             -skip qtremoteobjects -skip qtsensors -skip qtserialbus \
@@ -101,7 +101,7 @@ jobs:
             -prefix "%GITHUB_WORKSPACE%\qt-install" ^
             -nomake examples -nomake tests ^
             -skip qtwebengine -skip qt3d -skip qtquick3d -skip qtdeclarative ^
-            -skip qtcharts -skip qtdatavis3d -skip qtlottie ^
+            -skip qtcharts -skip qtdatavis3d -skip qtlottie -skip qtgraphs ^
             -skip qtscxml -skip qtvirtualkeyboard -skip qtwayland ^
             -skip qtwebsockets -skip qtwebchannel -skip qtwebview ^
             -skip qtremoteobjects -skip qtsensors -skip qtserialbus ^
