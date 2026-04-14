@@ -76,6 +76,10 @@ jobs:
       - name: Configure Qt (Unix)
         if: runner.os != 'Windows'
         run: |
+          CLANG_ARGS=""
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            CLANG_ARGS="-DClang_DIR=/usr/lib/llvm-18/lib/cmake/clang"
+          fi
           mkdir build && cd build
           ../qt-everywhere-src-${QT_VERSION}/configure \
             -static -release -opensource -confirm-license \
@@ -83,7 +87,7 @@ jobs:
             ${{ matrix.configure_extra }} \
             -nomake examples -nomake tests \
             -skip qtwebengine \
-            -- -G Ninja
+            -- -G Ninja $CLANG_ARGS
 
       - name: Configure Qt (Windows)
         if: runner.os == 'Windows'
