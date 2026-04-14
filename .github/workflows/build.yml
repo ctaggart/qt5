@@ -6,7 +6,7 @@ on:
       qt_version:
         description: "Qt version (e.g. 6.8.2)"
         required: true
-        default: "6.8.2"
+        default: "6.8.3"
 
 permissions: {}
 
