@@ -44,12 +44,9 @@ jobs:
       - name: Install dependencies (Linux)
         if: runner.os == 'Linux'
         run: |
-          # Remove broken LLVM 17 cmake files left on the runner image
-          sudo rm -rf /usr/lib/cmake/clang-17 /usr/lib/llvm-17
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             build-essential pkg-config perl python3 gperf \
-            libclang-18-dev llvm-18-dev \
             libgl1-mesa-dev libglu1-mesa-dev \
             libfontconfig1-dev libfreetype-dev \
             libglib2.0-dev \
@@ -76,18 +73,15 @@ jobs:
       - name: Configure Qt (Unix)
         if: runner.os != 'Windows'
         run: |
-          CLANG_ARGS=""
-          if [ "$RUNNER_OS" = "Linux" ]; then
-            CLANG_ARGS="-DClang_DIR=/usr/lib/llvm-18/lib/cmake/clang"
-          fi
           mkdir build && cd build
           ../qt-everywhere-src-${QT_VERSION}/configure \
             -static -release -opensource -confirm-license \
             -prefix "$GITHUB_WORKSPACE/qt-install" \
             ${{ matrix.configure_extra }} \
             -nomake examples -nomake tests \
+            -no-feature-clangcpp \
             -skip qtwebengine \
-            -- -G Ninja $CLANG_ARGS
+            -- -G Ninja
 
       - name: Configure Qt (Windows)
         if: runner.os == 'Windows'
@@ -99,6 +93,7 @@ jobs:
             -static -release -opensource -confirm-license ^
             -prefix "%GITHUB_WORKSPACE%\qt-install" ^
             -nomake examples -nomake tests ^
+            -no-feature-clangcpp ^
             -skip qtwebengine ^
             -- -G Ninja
 
