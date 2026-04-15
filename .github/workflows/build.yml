@@ -26,11 +26,11 @@ jobs:
             configure_extra: ""
           - os: macos-14
             target: aarch64-macos
-            llvm_target: aarch64-macos
-            configure_extra: "-no-framework"
+            llvm_target: ""
+            configure_extra: "-no-framework -no-feature-clangcpp"
           - os: windows-latest
             target: x86_64-windows-msvc
-            llvm_target: x86_64-windows-msvc
+            llvm_target: ""
             configure_extra: ""
 
     runs-on: ${{ matrix.os }}
@@ -79,6 +79,7 @@ jobs:
           rm qt-src.tar.xz
 
       - name: Download LLVM
+        if: matrix.llvm_target != ''
         shell: bash
         run: |
           if [[ "${{ matrix.llvm_target }}" == *windows* ]]; then
@@ -119,6 +120,7 @@ jobs:
             -static -release -opensource -confirm-license ^
             -prefix "%GITHUB_WORKSPACE%\qt-install" ^
             -nomake examples -nomake tests ^
+            -no-feature-clangcpp ^
             -skip qtwebengine ^
             -- -G Ninja -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL
 
