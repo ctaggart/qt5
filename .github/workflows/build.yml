@@ -7,6 +7,10 @@ on:
         description: "Qt version (e.g. 6.8.2)"
         required: true
         default: "6.8.3"
+      llvm_version:
+        description: "LLVM version for Clang libraries (e.g. 21.1.8)"
+        required: true
+        default: "21.1.8"
 
 permissions: {}
 
@@ -18,18 +22,22 @@ jobs:
         include:
           - os: ubuntu-24.04
             target: x86_64-linux-gnu
+            llvm_target: x86_64-linux
             configure_extra: ""
           - os: macos-14
             target: aarch64-macos
+            llvm_target: aarch64-macos
             configure_extra: "-no-framework"
           - os: windows-latest
             target: x86_64-windows-msvc
+            llvm_target: x86_64-windows-msvc
             configure_extra: ""
 
     runs-on: ${{ matrix.os }}
     timeout-minutes: 180
     env:
       QT_VERSION: ${{ inputs.qt_version }}
+      LLVM_VERSION: ${{ inputs.llvm_version }}
 
     steps:
       - uses: actions/checkout@v4
@@ -70,6 +78,25 @@ jobs:
           tar xf qt-src.tar.xz
           rm qt-src.tar.xz
 
+      - name: Download LLVM
+        shell: bash
+        run: |
+          if [[ "${{ matrix.llvm_target }}" == *windows* ]]; then
+            ext="zip"
+          else
+            ext="tar.xz"
+          fi
+          asset="llvm-zig-${LLVM_VERSION}-${{ matrix.llvm_target }}.${ext}"
+          curl -fSL -o "$asset" \
+            "https://github.com/ctaggart/llvm-project/releases/download/llvmorg-${LLVM_VERSION}/${asset}"
+          if [[ "$ext" == "zip" ]]; then
+            unzip -q "$asset"
+          else
+            tar xf "$asset"
+          fi
+          rm "$asset"
+          echo "LLVM_INSTALL_DIR=$GITHUB_WORKSPACE/llvm-zig-${LLVM_VERSION}-${{ matrix.llvm_target }}" >> "$GITHUB_ENV"
+
       - name: Configure Qt (Unix)
         if: runner.os != 'Windows'
         run: |
@@ -79,7 +106,6 @@ jobs:
             -prefix "$GITHUB_WORKSPACE/qt-install" \
             ${{ matrix.configure_extra }} \
             -nomake examples -nomake tests \
-            -no-feature-clangcpp \
             -skip qtwebengine \
             -- -G Ninja
 
@@ -93,7 +119,6 @@ jobs:
             -static -release -opensource -confirm-license ^
             -prefix "%GITHUB_WORKSPACE%\qt-install" ^
             -nomake examples -nomake tests ^
-            -no-feature-clangcpp ^
             -skip qtwebengine ^
             -- -G Ninja -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL
 
