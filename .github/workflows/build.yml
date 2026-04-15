@@ -108,7 +108,7 @@ jobs:
             ${{ matrix.configure_extra }} \
             -nomake examples -nomake tests \
             -skip qtwebengine -skip qtpdf \
-            -- -G Ninja
+            -- -G Ninja -DBUILD_qtwebengine=OFF -DBUILD_qtpdf=OFF
 
       - name: Configure Qt (Windows)
         if: runner.os == 'Windows'
@@ -121,7 +121,7 @@ jobs:
             -prefix "%GITHUB_WORKSPACE%\qt-install" ^
             -nomake examples -nomake tests ^
             -skip qtwebengine -skip qtpdf ^
-            -- -G Ninja -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded
+            -- -G Ninja -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded -DBUILD_qtwebengine=OFF -DBUILD_qtpdf=OFF
 
       - name: Build
         run: cmake --build build --parallel
