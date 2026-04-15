@@ -1,6 +1,6 @@
 # Qt Static Libraries
 
-Pre-built static Qt 6.8 libraries for use with `zig build`.
+Pre-built static Qt libraries for use with `zig build`.
 Published as GitHub releases so `build.zig.zon` can depend on them.
 
 ## Platforms
@@ -8,7 +8,7 @@ Published as GitHub releases so `build.zig.zon` can depend on them.
 | Target | Runner |
 |--------|--------|
 | x86_64-windows-msvc | windows-latest |
-| x86_64-linux-gnu | ubuntu-22.04 |
+| x86_64-linux-gnu | ubuntu-24.04 |
 | aarch64-macos | macos-14 |
 
 ## Modules Included

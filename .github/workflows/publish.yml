@@ -52,7 +52,7 @@ jobs:
 
           Modules included: qtbase (Core, Gui, Widgets, Xml, Network), qtmultimedia, qtsvg.
 
-          Built with: -static -release (Windows: /MD dynamic CRT)
+          Built with: -static -release (Windows: /MT static CRT)
 
           Source: https://download.qt.io/official_releases/qt/"
 

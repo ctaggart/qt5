@@ -6,7 +6,7 @@ on:
       qt_version:
         description: "Qt version (e.g. 6.8.2)"
         required: true
-        default: "6.8.3"
+        default: "6.11.0"
       llvm_version:
         description: "LLVM version for Clang libraries (e.g. 21.1.8)"
         required: true
@@ -122,7 +122,7 @@ jobs:
             -nomake examples -nomake tests ^
             -no-feature-clangcpp ^
             -skip qtwebengine ^
-            -- -G Ninja -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL
+            -- -G Ninja -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded
 
       - name: Build
         run: cmake --build build --parallel
@@ -180,7 +180,7 @@ jobs:
 
           Modules included: qtbase (Core, Gui, Widgets, Xml, Network), qtmultimedia, qtsvg.
 
-          Built with: -static -release (Windows: /MD dynamic CRT)
+          Built with: -static -release (Windows: /MT static CRT)
 
           Source: https://download.qt.io/official_releases/qt/"
 
