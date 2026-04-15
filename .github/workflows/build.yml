@@ -95,7 +95,7 @@ jobs:
             -nomake examples -nomake tests ^
             -no-feature-clangcpp ^
             -skip qtwebengine ^
-            -- -G Ninja
+            -- -G Ninja -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL
 
       - name: Build
         run: cmake --build build --parallel
@@ -153,7 +153,7 @@ jobs:
 
           Modules included: qtbase (Core, Gui, Widgets, Xml, Network), qtmultimedia, qtsvg.
 
-          Built with: -static -release
+          Built with: -static -release (Windows: /MD dynamic CRT)
 
           Source: https://download.qt.io/official_releases/qt/"
 
