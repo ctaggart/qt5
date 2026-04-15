@@ -27,7 +27,7 @@ jobs:
           - os: macos-14
             target: aarch64-macos
             llvm_target: ""
-            configure_extra: "-no-framework -no-feature-clangcpp"
+            configure_extra: "-no-framework"
           - os: windows-latest
             target: x86_64-windows-msvc
             llvm_target: ""
@@ -120,7 +120,6 @@ jobs:
             -static -release -opensource -confirm-license ^
             -prefix "%GITHUB_WORKSPACE%\qt-install" ^
             -nomake examples -nomake tests ^
-            -no-feature-clangcpp ^
             -skip qtwebengine ^
             -- -G Ninja -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded
 
