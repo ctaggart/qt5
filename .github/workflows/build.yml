@@ -107,7 +107,7 @@ jobs:
             -prefix "$GITHUB_WORKSPACE/qt-install" \
             ${{ matrix.configure_extra }} \
             -nomake examples -nomake tests \
-            -skip qtwebengine \
+            -skip qtwebengine -skip qtpdf \
             -- -G Ninja
 
       - name: Configure Qt (Windows)
@@ -120,7 +120,7 @@ jobs:
             -static -release -opensource -confirm-license ^
             -prefix "%GITHUB_WORKSPACE%\qt-install" ^
             -nomake examples -nomake tests ^
-            -skip qtwebengine ^
+            -skip qtwebengine -skip qtpdf ^
             -- -G Ninja -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded
 
       - name: Build
